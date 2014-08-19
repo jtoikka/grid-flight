@@ -1,0 +1,14 @@
+{
+  "shaders": {
+  	"entity": {
+      "vertex": "data/shaders/entity.vs",
+      "fragment": "data/shaders/entity.fs",
+      "attributes": ["position", "texCoord"],
+      "unifs": ["modelToCameraMatrix",
+                "cameraToClipMatrix",
+                "lightMatrix",
+                "diffuseTex",
+                "shadowTex"]
+    }
+  }
+}
