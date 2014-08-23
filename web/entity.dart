@@ -5,13 +5,13 @@ import 'package:vector_math/vector_math.dart';
 import 'component.dart';
 
 class EntityType {
-    static const FIREBALL = const EntityType._(0);
+    static const TUNNEL = const EntityType._(0);
     static const FUEL = const EntityType._(1);
     static const SHIP = const EntityType._(2);
     static const HORIZONTAL = const EntityType._(3);
     static const VERTICAL = const EntityType._(4);
 
-    static get values => [FIREBALL, FUEL, SHIP, HORIZONTAL, VERTICAL];
+    static get values => [TUNNEL, FUEL, SHIP, HORIZONTAL, VERTICAL];
 
     final int value;
 
@@ -25,6 +25,8 @@ class Entity {
     Vector3 position = new Vector3.zero();
     Vector3 forward = new Vector3(0.0, 0.0, 1.0);
     Vector3 up = new Vector3(0.0, 1.0, 0.0);
+
+    bool followShip = false;
 
     Map<Type, Component> components = new Map();
 

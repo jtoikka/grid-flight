@@ -6,8 +6,9 @@ class Component {}
 
 class CollisionShape {
     static const CUBE = const CollisionShape._(0);
+    static const PLANE = const CollisionShape._(1);
 
-    static get values => [CUBE];
+    static get values => [CUBE, PLANE];
 
     final int value;
 
@@ -20,8 +21,23 @@ class CollisionComponent extends Component {
     double height;
 }
 
+class RenderType {
+    static const BASIC = const RenderType._(0);
+    static const GROUND = const RenderType._(1);
+
+    static get values => [BASIC, GROUND];
+
+    final int value;
+
+    const RenderType._(this.value);
+}
+
 class RenderComponent extends Component {
     String meshID;
+    RenderType type;
+    String textureID;
+    double offsetMultiplier = 0.0;
+    Map<String, List<Vector3>> multiDraw;
 }
 
 class PhysicsComponent extends Component {

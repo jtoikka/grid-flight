@@ -16,7 +16,7 @@ class StateMachine {
 
     int loadStatus = 0;
 
-    final int loadCount = 2;
+    final int loadCount = 6;
 
     GameState _gameState;
 
@@ -50,6 +50,12 @@ class StateMachine {
             meshes.forEach((name, path) {
                 _renderer.loadMesh(gl, path, name).then((e) => loadStatus++);
             });
+        });
+        HttpRequest.getString("data/textures/textures.json").then((jsonString) {
+           Map textures = JSON.decode(jsonString);
+           textures.forEach((name, path) {
+               _renderer.loadTexture(gl, path, name).then((e) => loadStatus++);
+           });
         });
     }
 

@@ -3,6 +3,7 @@ library Renderer;
 import 'dart:web_gl';
 import 'dart:html';
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:vector_math/vector_math.dart';
 
@@ -14,6 +15,8 @@ import 'entity.dart';
 import 'component.dart';
 import 'scene.dart';
 
+const NOISETEXUNIT = 0;
+const DIFFUSETEXUNIT = 1;
 const SHADOWTEXUNIT = 3;
 
 class TextureObject {
@@ -30,6 +33,8 @@ class Renderer {
 
     Map<String, Mesh> meshes = new Map();
     Map<String, TextureObject> textures = new Map();
+
+    int maxAnisotropy = 0;
 
 
 /*
@@ -55,6 +60,7 @@ class Renderer {
         gl.depthRange(0.0, 1.0);
         gl.clearDepth(1.0);
         gl.enableVertexAttribArray(0);
+        gl.enableVertexAttribArray(1);
         gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
         var depthTexExt = gl.getExtension("WEBGL_depth_texture");
@@ -69,6 +75,11 @@ class Renderer {
         if (standardDerivatives == null) {
             print("Standard derivatives not supported");
         }
+        var anisotropicExt = gl.getExtension("EXT_texture_filter_anisotropic"); // TODO: implement alternative names
+        if (anisotropicExt != null) {
+            maxAnisotropy = gl.getParameter(ExtTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+        }
+
         genEmptyTexture(gl, 1024, 1024, DEPTH_COMPONENT, "shadowTexture");
         genEmptyTexture(gl, 1024, 1024, RGB, "footex");
 
@@ -109,24 +120,71 @@ class Renderer {
                       modelToCamera.storage);
     }
 
+    var firstRender = true;
+
     void renderScene(RenderingContext gl, Scene scene) {
-        var shaderProgram = shaderManager.programs["entity"];
-        gl.useProgram(shaderProgram.handle);
-        setCameraToClipMatrix(gl, scene.camera, shaderProgram);
+        if (firstRender) {
+            firstRender = false;
+            var data = scene.river.noiseSequence;
+            textures["noiseTex"] = loadTextureFromList(gl, data.length ~/ 3,
+                                                       1, data);
+        }
+        var sortedEntities = new Map<RenderType, List>();
+        for (var value in RenderType.values) {
+            sortedEntities[value] = new List();
+        }
         for (var entity in scene.entities) {
             var renderComponent = entity.getComponent(RenderComponent);
             if (renderComponent != null) {
-                renderEntity(gl, entity, scene.camera, shaderProgram);
+                sortedEntities[renderComponent.type].add(entity);
             }
+        }
+
+        var entityProgram = shaderManager.programs["entity"];
+        gl.useProgram(entityProgram.handle);
+        setCameraToClipMatrix(gl, scene.camera, entityProgram);
+
+        gl.activeTexture(TEXTURE0 + SHADOWTEXUNIT);
+        gl.bindTexture(TEXTURE_2D,  textures["shadowTexture"].texture);
+        gl.uniform1i(entityProgram.unifs["shadowTex"], SHADOWTEXUNIT);
+
+        for (var entity in sortedEntities[RenderType.BASIC]) {
+            renderEntity(gl, entity, scene.camera, entityProgram);
+        }
+
+        var groundProgram = shaderManager.programs["ground"];
+        gl.useProgram(groundProgram.handle);
+        setCameraToClipMatrix(gl, scene.camera, groundProgram);
+        gl.uniform1f(groundProgram.unifs["dist"], scene.camera.position.z);
+
+        gl.activeTexture(TEXTURE0 + SHADOWTEXUNIT);
+        gl.bindTexture(TEXTURE_2D,  textures["shadowTexture"].texture);
+        gl.uniform1i(groundProgram.unifs["shadowTex"], SHADOWTEXUNIT);
+
+        gl.activeTexture(TEXTURE0 + NOISETEXUNIT);
+        gl.bindTexture(TEXTURE_2D, textures["noiseTex"].texture);
+        gl.uniform1i(groundProgram.unifs["noiseTex"], NOISETEXUNIT);
+
+        for (var entity in sortedEntities[RenderType.GROUND]) {
+            var renderComponent = entity.getComponent(RenderComponent);
+            gl.uniform1f(groundProgram.unifs["offsetMultiplier"],
+                         renderComponent.offsetMultiplier);
+            renderEntity(gl, entity, scene.camera, groundProgram);
         }
     }
 
     void renderMesh(RenderingContext gl, Mesh mesh, CompiledProgram program) {
         if (mesh.isRenderable) {
             gl.bindBuffer(ARRAY_BUFFER, mesh.vertexBuffer);
-            gl.bindBuffer(ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
             gl.vertexAttribPointer(program.attribs["position"],
                                    3, FLOAT, false, 0, 0);
+
+            gl.bindBuffer(ARRAY_BUFFER, mesh.uvBuffer);
+            gl.vertexAttribPointer(program.attribs["texCoords"],
+                                   2, FLOAT, false, 0, 0);
+
+            gl.bindBuffer(ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+
             gl.drawElements(TRIANGLES, mesh.indices.length, UNSIGNED_SHORT, 0);
         }
     }
@@ -142,18 +200,46 @@ class Renderer {
         transform[15] = 1.0;
         transform[12] = entity.position.x;
         transform[13] = entity.position.y;
-        transform[14] = entity.position.z - camera.position.z;
+        transform[14] = entity.position.z;
 
-        transform = transform * entity.getLookMatrix();
+        gl.activeTexture(TEXTURE0 + DIFFUSETEXUNIT);
+        gl.bindTexture(TEXTURE_2D, textures[renderComponent.textureID].texture);
+//        gl.texParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR_MIPMAP_LINEAR);
+        gl.uniform1i(program.unifs["diffuseTex"], DIFFUSETEXUNIT);
 
-        gl.activeTexture(TEXTURE0 + SHADOWTEXUNIT);
-        gl.bindTexture(TEXTURE_2D,  textures["shadowTexture"].texture);
-        gl.uniform1i(program.unifs["shadowTex"], SHADOWTEXUNIT);
+        var lookMatrix = entity.getLookMatrix();
 
         gl.useProgram(program.handle);
-        setModelToCameraMatrix(gl, camera, program,
-                               transformationMatrix: transform);
-        renderMesh(gl, meshes[renderComponent.meshID], program);
+        if (renderComponent.multiDraw != null) {
+            var previousOffset = new Vector3(0.0, 0.0, 0.0);
+            renderComponent.multiDraw.forEach((meshName, offsets) {
+                var mesh = meshes[meshName];
+                gl.bindBuffer(ARRAY_BUFFER, mesh.vertexBuffer);
+                gl.vertexAttribPointer(program.attribs["position"],
+                                       3, FLOAT, false, 0, 0);
+
+                gl.bindBuffer(ARRAY_BUFFER, mesh.uvBuffer);
+                gl.vertexAttribPointer(program.attribs["texCoords"],
+                                       2, FLOAT, false, 0, 0);
+
+                gl.bindBuffer(ELEMENT_ARRAY_BUFFER, mesh.indexBuffer);
+                for (var offset in offsets) {
+                    transform[12] += offset.x - previousOffset.x;
+                    transform[13] += offset.y - previousOffset.y;
+                    transform[14] += offset.z - previousOffset.z;
+                    var transMat = transform * lookMatrix;
+                    previousOffset = offset;
+                    setModelToCameraMatrix(gl, camera, program,
+                                           transformationMatrix: transMat);
+                    gl.drawElements(TRIANGLES, mesh.indices.length, UNSIGNED_SHORT, 0);
+                }
+            });
+        } else {
+            transform = transform * lookMatrix;
+            setModelToCameraMatrix(gl, camera, program,
+                                   transformationMatrix: transform);
+            renderMesh(gl, meshes[renderComponent.meshID], program);
+        }
     }
 
     Future loadTexture(RenderingContext gl, String path,
@@ -171,9 +257,11 @@ class Renderer {
                 gl.texParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, NEAREST);
                 gl.texParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, NEAREST);
             } else {
+                if (maxAnisotropy > 0)
+                    gl.texParameterf(TEXTURE_2D, ExtTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, 8);
                 gl.texParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR);
                 gl.texParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER,
-                                 LINEAR_MIPMAP_NEAREST);
+                        LINEAR_MIPMAP_LINEAR);
                 gl.generateMipmap(TEXTURE_2D);
             }
             gl.bindTexture(TEXTURE_2D, null);
@@ -186,6 +274,23 @@ class Renderer {
             textures[id] = texObj;
         });
         return load.asFuture();
+    }
+
+    TextureObject loadTextureFromList(RenderingContext gl, int resolutionX,
+                             int resolutionY, Uint8List data) {
+        var texture = gl.createTexture();
+        gl.activeTexture(TEXTURE0);
+        gl.bindTexture(TEXTURE_2D, texture);
+        gl.texImage2DTyped(TEXTURE_2D, 0, RGB, resolutionX, resolutionY, 0,
+                            RGB, UNSIGNED_BYTE, data);
+        gl.texParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, NEAREST);
+        gl.texParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, NEAREST);
+
+        var texObj = new TextureObject();
+        texObj.texture = texture;
+        texObj.width = resolutionX;
+        texObj.height = resolutionY;
+        return texObj;
     }
 
     void genEmptyTexture(RenderingContext gl, int width,

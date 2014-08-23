@@ -3,12 +3,25 @@
   	"entity": {
       "vertex": "data/shaders/entity.vs",
       "fragment": "data/shaders/entity.fs",
-      "attributes": ["position", "texCoord"],
+      "attributes": ["position", "texCoords"],
       "unifs": ["modelToCameraMatrix",
                 "cameraToClipMatrix",
                 "lightMatrix",
                 "diffuseTex",
                 "shadowTex"]
+    },
+    "ground": {
+        "vertex": "data/shaders/ground.vs",
+        "fragment": "data/shaders/ground.fs",
+        "attributes": ["position", "texCoords"],
+        "unifs": ["modelToCameraMatrix",
+                  "cameraToClipMatrix",
+                  "lightMatrix",
+                  "diffuseTex",
+                  "shadowTex",
+                  "noiseTex",
+                  "dist",
+                  "offsetMultiplier"]
     }
   }
 }

@@ -15,7 +15,7 @@ class Camera {
     Matrix4 cameraToClipMatrix;
 
     Camera(Vector3 position, Vector2 dimensions,
-          {double fieldOfView: 36.0, Vector3 forward, Vector3 up,
+          {double fieldOfView: 34.0, Vector3 forward, Vector3 up,
            orthographic: false}) {
         this.position = position;
         if (forward != null) this.forward = forward.normalize();

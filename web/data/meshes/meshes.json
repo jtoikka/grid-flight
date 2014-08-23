@@ -1,3 +1,8 @@
 {
-	"spaceShip": "data/meshes/space_ship.obj"
+	"spaceShip": "data/meshes/space_ship.obj",
+    "tunnel": "data/meshes/tunnel.obj",
+    "ground": "data/meshes/ground.obj",
+    "riverwalls": "data/meshes/riverwalls.obj",
+    "collumn": "data/meshes/collumn.obj",
+    "row": "data/meshes/row.obj"
 }
