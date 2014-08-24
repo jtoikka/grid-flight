@@ -10,7 +10,9 @@ import 'physics.dart';
 import 'river.dart';
 
 const SHADOWRESOLUTION = 1024.0;
-const FOLLOWOFFSET = 5.0;
+const FOLLOWOFFSET = 3.5;
+const WALLPERIOD = 30.0;
+const MAXDEPTH = 400.0;
 
 class Scene {
     Camera camera;
@@ -19,6 +21,8 @@ class Scene {
     River river;
     double time = 0.0;
     List<Entity> entities = new List();
+
+    double lastAddedWall = 0.0; // Previous distance at which wall added
 
     Scene(Vector2 dimensions) {
         river = new River();
@@ -31,8 +35,23 @@ class Scene {
         ship = Factory.createShip(new Vector3(0.0, 0.0, 3.0));
         entities.add(ship);
 
-        var tunnel = Factory.createTunnel();
-        entities.add(tunnel);
+        var tunnelRender = Factory.createTunnel();
+        entities.add(tunnelRender);
+
+        var tunnelWallLeft = Factory.createCollisionWallLeft();
+        entities.add(tunnelWallLeft);
+
+        var tunnelWallRight = Factory.createCollisionWallRight();
+        entities.add(tunnelWallRight);
+
+        var tunnelCeiling = Factory.createCollisionCeiling();
+        entities.add(tunnelCeiling);
+
+        var tunnelFloorLeft = Factory.createCollisionFloorLeft(FOLLOWOFFSET);
+        entities.add(tunnelFloorLeft);
+
+        var tunnelFloorRight = Factory.createCollisionFloorRight(FOLLOWOFFSET);
+        entities.add(tunnelFloorRight);
 
         var ground = Factory.createGround();
         entities.add(ground);
@@ -40,8 +59,11 @@ class Scene {
         var riverWalls = Factory.createRiverWalls();
         entities.add(riverWalls);
 
-        var collumn = Factory.createWall(99.5, 1, 1);
-        entities.add(collumn);
+        for (double i = WALLPERIOD; i < MAXDEPTH; i+=WALLPERIOD) {
+            var wall = Factory.createWall(i + 0.5, 3, 2);
+            entities.add(wall);
+            lastAddedWall = i;
+        }
     }
 
     void update(double delta) {
@@ -52,19 +74,122 @@ class Scene {
                 Physics.update(delta, entity);
             }
             if (entity.followShip) {
-                entity.position.z = ship.position.z - FOLLOWOFFSET;
+                entity.position.z = ship.position.z - FOLLOWOFFSET
+                                  + entity.shipOffset;
+            }
+            if (entity.moveWithRiver) {
+                entity.position.x = river.getOffset(entity.position.z)
+                                  + entity.riverOffset;
+            }
+            if (entity.removeOffscreen) {
+                if (entity.position.z - ship.position.z + FOLLOWOFFSET < 0.0) {
+                    entity.toBeRemoved = true;
+                }
             }
         }
+        entities.removeWhere((entity) => entity.toBeRemoved);
+        if (ship.position.z - lastAddedWall + MAXDEPTH > WALLPERIOD) {
+            var dist = lastAddedWall + WALLPERIOD;
+            var wall = Factory.createWall(dist + 0.5, 5, 3);
+            entities.add(wall);
+            lastAddedWall = dist;
+        }
+        checkCollisions();
         updateCamera(delta, ship.position);
     }
 
     void updateCamera(double delta, Vector3 shipPos) {
         camera.position.z = ship.position.z - FOLLOWOFFSET;
-        camera.position.x = ship.position.x * 0.54;
-        camera.position.y = ship.position.y * 0.5;
+        camera.position.x = ship.position.x * 0.84;
+        camera.position.y = ship.position.y * 0.84;
         camera.forward = ship.position - camera.position
                        + new Vector3(0.0, 0.0, 18.0);
         camera.forward = camera.forward.normalize();
+    }
+
+    void checkCollisions() {
+        var shipCollision = ship.getComponent(CollisionComponent);
+        if (shipCollision == null) {
+            print("Ship missing collision box");
+            return;
+        }
+        var resolveVector = ((v) {
+            var min = v.x.abs() < v.y.abs() ? v.x : v.y;
+            min = min.abs() < v.z.abs() ? min : v.z;
+            if (v.x == min) {
+                return new Vector3(v.x, 0.0, 0.0);
+            } else if (v.y == min) {
+                return new Vector3(0.0, v.y, 0.0);
+            }
+            return new Vector3(0.0, 0.0, v.z);
+        });
+        for (var entity in entities) {
+            var collisionComponent = entity.getComponent(CollisionComponent);
+            if (collisionComponent != null) {
+                if (entity.entityType == EntityType.SHIP) continue;
+                switch (collisionComponent.shape) {
+                case CollisionShape.ARRAY:
+                    var depthDiff = (ship.position.z - entity.position.z).abs();
+                    var sumDepthDimensions = shipCollision.halfDimensionsA.z
+                                           + collisionComponent.halfDimensionsA.z;
+                    if (depthDiff - sumDepthDimensions > 0.0) continue;
+                    var checkEach = ((offset, halfDimensions) {
+                        var collision = aabbCollision(
+                                            ship.position,
+                                            entity.position + offset,
+                                            shipCollision.halfDimensionsA,
+                                            halfDimensions);
+                        if (collision.z != 0.0) {
+                            var resolution = resolveVector(collision);
+                            if (resolution.z < 0.0) {
+                                print("Took damage!");
+                            } else {
+                                ship.position += resolution;
+                            }
+                        }
+                    });
+                    for (var offset in collisionComponent.offsetsA) {
+                        checkEach(offset, collisionComponent.halfDimensionsA);
+                    }
+                    for (var offset in collisionComponent.offsetsB) {
+                        checkEach(offset, collisionComponent.halfDimensionsB);
+                    }
+                    break;
+                case CollisionShape.CUBE:
+                    var collision = aabbCollision(
+                                        ship.position, entity.position,
+                                        shipCollision.halfDimensionsA,
+                                        collisionComponent.halfDimensionsA);
+                    var resolution = resolveVector(collision);
+//                    if (collision.z != 0.0)
+//                        print(collision);
+                    ship.position += resolution;
+                    break;
+                default:
+                    break;
+                };
+            }
+        }
+    }
+
+    Vector3 aabbCollision(Vector3 positionA, Vector3 positionB,
+                       Vector3 halfDimensionsA, Vector3 halfDimensionsB) {
+        var diffPosition = positionA - positionB;
+        var sumDimensions = halfDimensionsA + halfDimensionsB;
+
+        var collisionX = sumDimensions.x - diffPosition.x.abs();
+        var collisionY = sumDimensions.y - diffPosition.y.abs();
+        var collisionZ = sumDimensions.z - diffPosition.z.abs();
+
+        if (collisionX < 0.0 || collisionY < 0.0 || collisionZ < 0.0) {
+            return new Vector3(0.0, 0.0, 0.0);
+        }
+
+        var collision = new Vector3(collisionX, collisionY, collisionZ);
+        if (diffPosition.x < 0.0) collision.x = -collision.x;
+        if (diffPosition.y < 0.0) collision.y = -collision.y;
+        if (diffPosition.z < 0.0) collision.z = -collision.z;
+        return collision;
     }
 
     static const UP = 1;

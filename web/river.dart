@@ -6,7 +6,7 @@ import 'dart:typed_data';
 class River {
     static const NOISERESOLUTION = 512;
     static const FREQUENCY = 0.015;
-    static const AMPLITUDE = 5.0;
+    static const AMPLITUDE = 4.0;
 
     Uint8List noiseSequence;
 
@@ -34,13 +34,16 @@ class River {
 
     double _noise(double dist) {
         double delta = dist * FREQUENCY;
-        int low = delta.floor();
-        int high = delta.ceil();
-        int r1 = noiseSequence[low * 3]; // Multiply by 3 as only every third
+        int low = delta.floor() % NOISERESOLUTION;
+        int high = delta.ceil() % NOISERESOLUTION;
+        double r1 = noiseSequence[(low) * 3] / 255.0; // Multiply by 3 as only every third
                                          // place contains a value ([r]gb)
-        int r2 = noiseSequence[high * 3];
-        double noise = _cosineInterpolate(r1.toDouble(), r2.toDouble(), (delta - low));
-        noise /= 255.0;
-        return noise * AMPLITUDE;
+        double r2 = noiseSequence[(high) * 3] / 255.0;
+        double noise = _cosineInterpolate(r1, r2, (delta - low));
+        return (noise - 0.5) * AMPLITUDE;
+    }
+
+    double getOffset(double dist) {
+        return -_noise(dist);
     }
 }

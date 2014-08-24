@@ -14,19 +14,19 @@ class Factory {
         var renderComponent = new RenderComponent();
         renderComponent.meshID = "spaceShip";
         renderComponent.type = RenderType.BASIC;
-//        entity.addComponent(renderComponent);
+        renderComponent.textureID = "tileDark";
+        entity.addComponent(renderComponent);
 
         entity.position = position;
-        entity.scale *= 0.15;
+        // entity.scale *= 0.15;
 
         var collisionComponent = new CollisionComponent();
         collisionComponent.shape = CollisionShape.CUBE;
-        collisionComponent.height = 1.5;
-        collisionComponent.width = 1.5;
+        collisionComponent.halfDimensionsA = new Vector3(0.3, 0.15, 0.2);
         entity.addComponent(collisionComponent);
 
         var physicsComponent = new PhysicsComponent();
-        physicsComponent.velocity = new Vector3(0.0, 0.0, 8.0);
+        physicsComponent.velocity = new Vector3(0.0, 0.0, 10.0);
         entity.addComponent(physicsComponent);
 
         return entity;
@@ -105,7 +105,7 @@ class Factory {
         var renderComponent = new RenderComponent();
         renderComponent.meshID = "collumn";
         renderComponent.type = RenderType.BASIC;
-        renderComponent.textureID = "tileDark";
+        renderComponent.textureID = "tile";
 
         var collumns = new List();
         var rows = new List();
@@ -120,6 +120,8 @@ class Factory {
             rows.add(new Vector3(0.0, rand - 2.0, 0.0));
         }
 
+        entity.removeOffscreen = true;
+
 
         renderComponent.multiDraw = new Map();
         renderComponent.multiDraw["collumn"] = collumns;
@@ -127,6 +129,111 @@ class Factory {
 
         entity.addComponent(renderComponent);
 
+        // Add collision Array
+
+        var collisionComponent = new CollisionComponent();
+        var collisionArray = new List.filled(35, false);
+
+        collisionComponent.shape = CollisionShape.ARRAY;
+        collisionComponent.halfDimensionsA = new Vector3(0.5, 2.5, 0.5);
+        collisionComponent.halfDimensionsB = new Vector3(3.5, 0.5, 0.5);
+        collisionComponent.offsetsA = collumns;
+        collisionComponent.offsetsB = rows;
+        entity.addComponent(collisionComponent);
+
         return entity;
+    }
+
+    static Entity createCollisionWallLeft() {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(-4.0, 0.0, 0.0);
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(0.5, 10.0, 100.0);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+
+        return entity;
+    }
+
+    static Entity createCollisionWallRight() {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(4.0, 0.0, 0.0);
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(0.5, 10.0, 100.0);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+
+        return entity;
+    }
+
+    static Entity createCollisionCeiling() {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(0.0, 3.0, 0.0);
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(10.0, 0.5, 100.0);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+
+        return entity;
+    }
+
+    static Entity createCollisionFloorLeft(double shipPosition) {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(-3.5, -6.0, shipPosition);
+
+        entity.riverOffset = -3.5;
+        entity.shipOffset = shipPosition;
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(2.0, 3.5, 1000.1);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+        entity.moveWithRiver = true;
+
+        return entity;
+
+    }
+
+    static Entity createCollisionFloorRight(double shipPosition) {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(3.5, -6.0, shipPosition);
+
+        entity.riverOffset = 3.5;
+        entity.shipOffset = shipPosition;
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(2.0, 3.5, 1000.1);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+        entity.moveWithRiver = true;
+
+        return entity;
+
     }
 }

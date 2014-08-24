@@ -35,7 +35,7 @@ float noise(float dist) {
 
 void main() {
     vec4 pos = vec4(position, 1.0);
-    float offset = noise(pos.z - dist);
+    float offset = noise(-pos.z + dist);
 
     pos.x += offset * abs(offsetMultiplier);
 

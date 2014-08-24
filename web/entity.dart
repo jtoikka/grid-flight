@@ -27,6 +27,12 @@ class Entity {
     Vector3 up = new Vector3(0.0, 1.0, 0.0);
 
     bool followShip = false;
+    bool removeOffscreen = false;
+    bool toBeRemoved = false;
+    bool moveWithRiver = false;
+
+    double riverOffset = 0.0;
+    double shipOffset = 0.0;
 
     Map<Type, Component> components = new Map();
 

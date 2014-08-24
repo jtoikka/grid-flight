@@ -7,8 +7,9 @@ class Component {}
 class CollisionShape {
     static const CUBE = const CollisionShape._(0);
     static const PLANE = const CollisionShape._(1);
+    static const ARRAY = const CollisionShape._(2);
 
-    static get values => [CUBE, PLANE];
+    static get values => [CUBE, PLANE, ARRAY];
 
     final int value;
 
@@ -17,8 +18,12 @@ class CollisionShape {
 
 class CollisionComponent extends Component {
     CollisionShape shape;
-    double width;
-    double height;
+    Vector3 halfDimensionsA = new Vector3(0.0, 0.0, 0.0);
+    Vector3 halfDimensionsB;
+    bool damaging = false;
+
+    List<Vector3> offsetsA;
+    List<Vector3> offsetsB;
 }
 
 class RenderType {
