@@ -33,6 +33,7 @@ const int UP = 1;
 const int RIGHT = 2;
 const int DOWN = 3;
 const int LEFT = 4;
+const int MOUSELEFT = 5;
 
 void checkInput(GameLoopHtml gameLoop, double time) {
     if (gameLoop.keyboard.isDown(KeyCode.W)) {
@@ -47,6 +48,14 @@ void checkInput(GameLoopHtml gameLoop, double time) {
     if (gameLoop.keyboard.isDown(KeyCode.D)) {
         stateMachine.input(RIGHT, time);
     }
+    if (gameLoop.mouse.released(0)) {
+        stateMachine.input(MOUSELEFT, time);
+    }
+
+    gameLoop.mouse.clampX;
+    gameLoop.mouse.clampY;
+    stateMachine.mousePosition.x = gameLoop.mouse.clampX.toDouble();
+    stateMachine.mousePosition.y = gameLoop.mouse.clampY.toDouble();
 }
 
 void main() {
@@ -66,5 +75,6 @@ void main() {
     GameLoopHtml gameLoop = new GameLoopHtml(canvas);
     gameLoop.onUpdate = update;
     gameLoop.onRender = render;
+    gameLoop.pointerLock.lockOnClick = false;
     gameLoop.start();
 }

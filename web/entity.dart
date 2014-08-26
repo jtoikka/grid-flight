@@ -10,8 +10,9 @@ class EntityType {
     static const SHIP = const EntityType._(2);
     static const HORIZONTAL = const EntityType._(3);
     static const VERTICAL = const EntityType._(4);
+    static const BUTTON = const EntityType._(5);
 
-    static get values => [TUNNEL, FUEL, SHIP, HORIZONTAL, VERTICAL];
+    static get values => [TUNNEL, FUEL, SHIP, HORIZONTAL, VERTICAL, BUTTON];
 
     final int value;
 
@@ -30,6 +31,7 @@ class Entity {
     bool removeOffscreen = false;
     bool toBeRemoved = false;
     bool moveWithRiver = false;
+    bool followMouse = false;
 
     double riverOffset = 0.0;
     double shipOffset = 0.0;

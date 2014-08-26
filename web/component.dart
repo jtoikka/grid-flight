@@ -29,8 +29,9 @@ class CollisionComponent extends Component {
 class RenderType {
     static const BASIC = const RenderType._(0);
     static const GROUND = const RenderType._(1);
+    static const FLAT = const RenderType._(2);
 
-    static get values => [BASIC, GROUND];
+    static get values => [BASIC, GROUND, FLAT];
 
     final int value;
 

@@ -1,11 +1,14 @@
 library State;
 
 import 'dart:web_gl';
+
 import 'package:vector_math/vector_math.dart';
 
 import 'event_manager.dart';
 import 'renderer.dart';
 import 'scene.dart';
+import 'render_resources.dart';
+import 'menu.dart';
 
 const int UP = 1;
 const int RIGHT = 2;
@@ -14,9 +17,40 @@ const int LEFT = 4;
 
 abstract class State {
     void update(double time, EventManager eventManager);
-    void render(RenderingContext gl, Renderer renderer);
-    void input(int inputType, double time);
+    void render(RenderingContext gl, Renderer renderer,
+                RenderResources resources);
+    void input(int inputType, double time,
+               Vector2 mousePos, EventManager eventManager);
     void clearInput();
+}
+
+class MenuState extends State {
+    Menu menu;
+
+    MenuState(int w, int h) {
+        menu = new Menu(w, h);
+    }
+    void update(double time, EventManager eventManager) {
+        menu.update(time);
+    }
+    void render(RenderingContext gl, Renderer renderer,
+                RenderResources resources) {
+        renderer.startRender(gl);
+        renderer.renderEntities(gl, menu.camera,
+                                menu.backgroundEntities, resources);
+        renderer.renderEntities(gl, menu.camera2D, menu.entities, resources);
+        renderer.endRender(gl, resources);
+    }
+
+    void input(int inputType, double time,
+               Vector2 mousePos, EventManager eventManager) {
+        menu.input(inputType, time, eventManager);
+        menu.setMousePosition(mousePos);
+    }
+
+    void clearInput() {
+
+    }
 }
 
 class GameState extends State {
@@ -25,7 +59,7 @@ class GameState extends State {
     Map<int, bool> inputs = new Map();
 
     GameState(int w, int h, int canvasW, int canvasH, EventManager eventManager) {
-        scene = new Scene(new Vector2(w.toDouble(), h.toDouble()));
+        scene = new Scene(w, h);
     }
 
     void update(double time, EventManager eventManager) {
@@ -33,11 +67,15 @@ class GameState extends State {
         scene.update(time);
     }
 
-    void render(RenderingContext gl, Renderer renderer) {
-        renderer.renderScene(gl, scene);
+    void render(RenderingContext gl, Renderer renderer,
+                RenderResources resources) {
+        renderer.startRender(gl);
+        renderer.renderEntities(gl, scene.camera, scene.entities, resources);
+        renderer.endRender(gl, resources);
     }
 
-    void input(int inputType, double time) {
+    void input(int inputType, double time, Vector2 mousePos,
+               EventManager eventManager) {
         if (inputType == UP) {
             inputs[UP] = true;
         } else if (inputType == LEFT) {

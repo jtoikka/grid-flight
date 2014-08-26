@@ -16,7 +16,7 @@ varying vec2 uv;
 #define PI 3.1415927
 #define NOISERES 512.0
 #define AMPLITUDE 4.0
-#define FREQUENCY 0.015
+#define FREQUENCY 0.03125
 
 float cosineInterpolate(float f, float c, float mu) {
     float mu2 = (1.0 - cos(mu * PI)) * 0.5;
@@ -46,5 +46,5 @@ void main() {
     uv = texCoords;
     uv.y -= offset * ((offsetMultiplier + 1.0) / 2.0) * offsetMultiplier;
     uv.x += dist;
-    uv.x = pos.z - dist;
+    uv.x = (pos.z - dist) * 0.25;
 }

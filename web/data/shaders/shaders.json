@@ -22,6 +22,15 @@
                   "noiseTex",
                   "dist",
                   "offsetMultiplier"]
+    },
+    "screen": {
+        "vertex": "data/shaders/screen.vs",
+        "fragment": "data/shaders/screen.fs",
+        "attributes": ["position", "texCoords"],
+        "unifs":["screenTex",
+                 "paletteTex",
+                 "noiseTex",
+                 "depthTex"]
     }
   }
 }

@@ -4,5 +4,6 @@
     "ground": "data/meshes/ground.obj",
     "riverwalls": "data/meshes/riverwalls.obj",
     "collumn": "data/meshes/collumn.obj",
-    "row": "data/meshes/row.obj"
+    "row": "data/meshes/row.obj",
+    "quad": "data/meshes/quad.obj"
 }

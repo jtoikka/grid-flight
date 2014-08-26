@@ -1,4 +1,18 @@
 {
-    "tile": "data/textures/gameboysquare.png",
-    "tileDark": "data/textures/gameboysquaredark.png"
+    "tile": {
+        "path": "data/textures/gameboysquare.png",
+        "nearest": false
+    },
+    "tileDark": {
+        "path":"data/textures/gameboysquaredark.png",
+        "nearest": false
+    },
+    "atlas": {
+        "path": "data/textures/atlas.png",
+        "nearest": true
+    },
+    "palette": {
+        "path": "data/textures/palettelookup.png",
+        "nearest": true
+    }
 }

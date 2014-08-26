@@ -5,34 +5,36 @@ import 'dart:math';
 import 'package:vector_math/vector_math.dart';
 
 class Camera {
-    Vector3 position;
+    Vector3 position = new Vector3(0.0, 0.0, 0.0);
     Vector3 forward = new Vector3(0.0, 0.0, 1.0);
     Vector3 up = new Vector3(0.0, 1.0, 0.0);
 
-    Vector2 dimensions; /// The dimensions of the viewport in pixels.
+    int w = 1; // width of viewport in pixels
+    int h = 1; // height in pixels
     double fieldOfView; /// Field of view specified in degrees.
 
     Matrix4 cameraToClipMatrix;
 
-    Camera(Vector3 position, Vector2 dimensions,
-          {double fieldOfView: 34.0, Vector3 forward, Vector3 up,
+    Camera({Vector3 position, int w, int h,
+            double fieldOfView: 34.0, Vector3 forward, Vector3 up,
            orthographic: false}) {
-        this.position = position;
+        if (position != null) this.position = position;
         if (forward != null) this.forward = forward.normalize();
         if (up != null) this.up = up.normalize();
+        if (w != null) this.w = w;
+        if (h != null) this.h = h;
         this.fieldOfView = fieldOfView;
 
         if (orthographic)
-            cameraToClipMatrix = orthographicProjection(dimensions.x.toInt(),
-                                                        dimensions.y.toInt());
+            cameraToClipMatrix = orthographicProjection();
         else
-            cameraToClipMatrix = perspectiveProjection(dimensions.x.toInt(),
-                                                       dimensions.y.toInt(),
+            cameraToClipMatrix = perspectiveProjection(this.w,
+                                                       this.h,
                                                        fieldOfView);
     }
 
     static Matrix4 perspectiveProjection(int w, int h, double fieldOfView,
-                                        {zNear: 0.3, zFar: 1000.0}) {
+                                        {zNear: 0.3, zFar: 400.0}) {
         var cameraToClipMatrix = new Matrix4.zero();
         var frustumScale = calcFrustumScale(fieldOfView);
 
@@ -45,7 +47,7 @@ class Camera {
         return cameraToClipMatrix;
     }
 
-    static Matrix4 orthographicProjection(int w, int h, {zNear: -10.0, zFar: 18,
+    static Matrix4 orthographicProjection({zNear: -10.0, zFar: 18,
                                           width: 3.0, height: 3.0}) {
         Matrix4 orthoMatrix = new Matrix4.identity();
         orthoMatrix = new Matrix4.identity();

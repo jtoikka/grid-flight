@@ -18,7 +18,6 @@ class Factory {
         entity.addComponent(renderComponent);
 
         entity.position = position;
-        // entity.scale *= 0.15;
 
         var collisionComponent = new CollisionComponent();
         collisionComponent.shape = CollisionShape.CUBE;
@@ -105,7 +104,7 @@ class Factory {
         var renderComponent = new RenderComponent();
         renderComponent.meshID = "collumn";
         renderComponent.type = RenderType.BASIC;
-        renderComponent.textureID = "tile";
+        renderComponent.textureID = "tileDark";
 
         var collumns = new List();
         var rows = new List();
@@ -135,7 +134,7 @@ class Factory {
         var collisionArray = new List.filled(35, false);
 
         collisionComponent.shape = CollisionShape.ARRAY;
-        collisionComponent.halfDimensionsA = new Vector3(0.5, 2.5, 0.5);
+        collisionComponent.halfDimensionsA = new Vector3(0.5, 10.0, 0.5);
         collisionComponent.halfDimensionsB = new Vector3(3.5, 0.5, 0.5);
         collisionComponent.offsetsA = collumns;
         collisionComponent.offsetsB = rows;
@@ -235,5 +234,41 @@ class Factory {
 
         return entity;
 
+    }
+
+    static Entity createStartButton(Vector2 dimensions) {
+        var entity = new Entity();
+        entity.entityType = EntityType.BUTTON;
+
+        var renderComponent = new RenderComponent();
+        renderComponent.meshID = "start";
+        renderComponent.textureID = "atlas";
+        renderComponent.type = RenderType.FLAT;
+        entity.addComponent(renderComponent);
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent.halfDimensionsA = new Vector3(dimensions.x, dimensions.y, 0.0);
+        entity.addComponent(collisionComponent);
+
+//        entity.followMouse = true;
+
+//        entity.position = new Vector3(0.0, 0.0, 0.0);
+//        entity.scale = new Vector3(2.0, 2.0, 2.0);
+        return entity;
+    }
+
+    static Entity createCursor() {
+        var entity = new Entity();
+        entity.entityType = EntityType.BUTTON;
+
+        var renderComponent = new RenderComponent();
+        renderComponent.meshID = "mouse";
+        renderComponent.textureID = "atlas";
+        renderComponent.type = RenderType.FLAT;
+        entity.addComponent(renderComponent);
+
+        entity.followMouse = true;
+
+        return entity;
     }
 }

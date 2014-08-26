@@ -19,29 +19,54 @@ class Mesh {
 
     Future objLoaded;
 
-    Mesh.fromList(List verticesList, List indicesList, RenderingContext gl) {
-        vertexBuffer = gl.createBuffer();
-        indexBuffer = gl.createBuffer();
-        uvBuffer = gl.createBuffer();
+    // Mesh.fromList(List verticesList, List indicesList, RenderingContext gl) {
+    //     vertexBuffer = gl.createBuffer();
+    //     indexBuffer = gl.createBuffer();
+    //     uvBuffer = gl.createBuffer();
 
-        vertices = verticesList;
-        indices = indicesList;
+    //     vertices = verticesList;
+    //     indices = indicesList;
+
+    //     gl.bindBuffer(ARRAY_BUFFER, vertexBuffer);
+    //     gl.bufferData(ARRAY_BUFFER, new Float32List.fromList(verticesList),
+    //                   STATIC_DRAW);
+
+    //     gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer);
+    //     gl.bufferData(ELEMENT_ARRAY_BUFFER,
+    //                   new Uint16List.fromList(indicesList), STATIC_DRAW);
+    //     gl.bindBuffer(ELEMENT_ARRAY_BUFFER, null);
+
+    //     gl.bindBuffer(ARRAY_BUFFER, uvBuffer);
+    //     gl.bufferData(ARRAY_BUFFER, new Float32List.fromList(texCoords),
+    //                   STATIC_DRAW);
+    //     gl.bindBuffer(ARRAY_BUFFER, null);
+
+    //     isRenderable = true;
+    // }
+
+    Mesh.fromData(RenderingContext gl, List verticesList,
+                  List uvList, List indicesList) {
+        vertexBuffer = gl.createBuffer();
+        uvBuffer = gl.createBuffer();
+        indexBuffer = gl.createBuffer();
 
         gl.bindBuffer(ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(ARRAY_BUFFER, new Float32List.fromList(verticesList),
                       STATIC_DRAW);
 
+        gl.bindBuffer(ARRAY_BUFFER, uvBuffer);
+        gl.bufferData(ARRAY_BUFFER, new Float32List.fromList(uvList),
+                      STATIC_DRAW);
+
         gl.bindBuffer(ELEMENT_ARRAY_BUFFER, indexBuffer);
         gl.bufferData(ELEMENT_ARRAY_BUFFER,
-                      new Uint16List.fromList(indicesList), STATIC_DRAW);
-        gl.bindBuffer(ELEMENT_ARRAY_BUFFER, null);
-
-        gl.bindBuffer(ARRAY_BUFFER, uvBuffer);
-        gl.bufferData(ARRAY_BUFFER, new Float32List.fromList(texCoords),
+                      new Uint16List.fromList(indicesList),
                       STATIC_DRAW);
-        gl.bindBuffer(ARRAY_BUFFER, null);
 
         isRenderable = true;
+        vertices = verticesList;
+        indices = indicesList;
+        texCoords = uvList;
     }
 
     Mesh(String path, RenderingContext gl) {

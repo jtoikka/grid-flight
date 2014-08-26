@@ -11,5 +11,6 @@ varying mediump vec2 uv;
 void main() {
     mediump vec4 colour = texture2D(diffuseTex, uv);
     mediump vec3 normal = normalize(cross(dFdx(viewPosition), dFdy(viewPosition)));
-	gl_FragColor = vec4(colour.xyz, 1.0);
+	gl_FragColor = colour;
+    // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

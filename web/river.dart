@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 class River {
     static const NOISERESOLUTION = 512;
-    static const FREQUENCY = 0.015;
+    static const FREQUENCY = 0.03125;
     static const AMPLITUDE = 4.0;
 
     Uint8List noiseSequence;

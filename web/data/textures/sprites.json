@@ -1,0 +1,21 @@
+{
+    "spriteSheet":"atlas",
+    "width": 1024,
+    "height": 1024,
+    "sprites": {
+        "start": {
+            "top": 0,
+            "bottom": 128,
+            "left": 0,
+            "right": 384,
+            "depth": 1
+        },
+        "mouse": {
+            "top": 0,
+            "bottom": 9,
+            "left": 384,
+            "right":393,
+            "depth": 2
+        }
+    }
+}

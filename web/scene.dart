@@ -9,9 +9,9 @@ import 'factory.dart';
 import 'physics.dart';
 import 'river.dart';
 
-const SHADOWRESOLUTION = 1024.0;
+const SHADOWRESOLUTION = 1024;
 const FOLLOWOFFSET = 3.5;
-const WALLPERIOD = 30.0;
+const WALLPERIOD = 16.0;
 const MAXDEPTH = 400.0;
 
 class Scene {
@@ -24,11 +24,11 @@ class Scene {
 
     double lastAddedWall = 0.0; // Previous distance at which wall added
 
-    Scene(Vector2 dimensions) {
+    Scene(int w, int h) {
         river = new River();
-        camera = new Camera(new Vector3(0.0, 0.0, 0.0), dimensions);
-        light = new Camera(new Vector3(0.0, 4.9, -17.0),
-                           new Vector2(SHADOWRESOLUTION, SHADOWRESOLUTION),
+        camera = new Camera(w: w, h: h);
+        light = new Camera(position: new Vector3(0.0, 4.9, -17.0),
+                           w: SHADOWRESOLUTION, h: SHADOWRESOLUTION,
                            forward: new Vector3(0.0, -1.0, -0.0),
                            up: new Vector3(0.0, 0.0, -1.0),
                            orthographic: true);
@@ -60,7 +60,7 @@ class Scene {
         entities.add(riverWalls);
 
         for (double i = WALLPERIOD; i < MAXDEPTH; i+=WALLPERIOD) {
-            var wall = Factory.createWall(i + 0.5, 3, 2);
+            var wall = Factory.createWall(i + 0.5, 1, 1);
             entities.add(wall);
             lastAddedWall = i;
         }
@@ -90,7 +90,7 @@ class Scene {
         entities.removeWhere((entity) => entity.toBeRemoved);
         if (ship.position.z - lastAddedWall + MAXDEPTH > WALLPERIOD) {
             var dist = lastAddedWall + WALLPERIOD;
-            var wall = Factory.createWall(dist + 0.5, 5, 3);
+            var wall = Factory.createWall(dist + 0.5, 2, 1);
             entities.add(wall);
             lastAddedWall = dist;
         }
