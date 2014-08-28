@@ -18,6 +18,10 @@ const PALETTETEXUNIT = 2;
 const SHADOWTEXUNIT = 3;
 const DITHERNOISETEXUNIT = 5;
 const DEPTHTEXUNIT = 6;
+const HEIGHTMAPTEXUNIT = 7;
+
+const INTERNALRESX = 480;
+const INTERNALRESY = 320;
 
 class Renderer {
     ShaderManager shaderManager;
@@ -52,8 +56,10 @@ class Renderer {
             print("Standard derivatives not supported");
         }
 
-        resources.genEmptyTexture(gl, 240, 160, RGB, "renderTex");
-        resources.genEmptyTexture(gl, 240, 160, DEPTH_COMPONENT, "renderDepth");
+        resources.genEmptyTexture(gl, INTERNALRESX, INTERNALRESY,
+                                  RGB, "renderTex");
+        resources.genEmptyTexture(gl, INTERNALRESX, INTERNALRESY,
+                                  DEPTH_COMPONENT, "renderDepth");
         var attachments = [DEPTH_ATTACHMENT, COLOR_ATTACHMENT0];
         var fboTextures = [resources.textures["renderDepth"].texture,
                            resources.textures["renderTex"].texture];
@@ -97,6 +103,12 @@ class Renderer {
                                 CompiledProgram program,
                                 {Matrix4 transformationMatrix}) {
         Matrix4 modelToCamera = camera.getLookMatrix();
+        if (program.unifs["worldToCameraMatrix"] != null) {
+//            print(modelToCamera);
+            gl.uniformMatrix4fv(program.unifs["worldToCameraMatrix"], false,
+                                modelToCamera.storage);
+//            print(transformationMatrix);
+        }
         if (transformationMatrix != null) {
             modelToCamera *= transformationMatrix;
         }
@@ -122,7 +134,7 @@ class Renderer {
 
     void startRender(RenderingContext gl) {
         gl.bindFramebuffer(FRAMEBUFFER, renderFBO.handle);
-        gl.viewport(0, 0, 240, 160);
+        gl.viewport(0, 0, INTERNALRESX, INTERNALRESY);
         gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     }
 
@@ -155,7 +167,7 @@ class Renderer {
 
 
     void renderEntities(RenderingContext gl, Camera camera,
-                     List entities, RenderResources resources) {
+                     List entities, RenderResources resources, double time) {
         setupRender(gl);
         var sortedEntities = new Map<RenderType, List>();
         for (var value in RenderType.values) {
@@ -171,10 +183,15 @@ class Renderer {
         var entityProgram = shaderManager.programs["entity"];
         gl.useProgram(entityProgram.handle);
         setCameraToClipMatrix(gl, camera, entityProgram);
+        gl.uniform1f(entityProgram.unifs["dist"], camera.position.z);
 
         gl.activeTexture(TEXTURE0 + SHADOWTEXUNIT);
         gl.bindTexture(TEXTURE_2D, resources.textures["shadowTexture"].texture);
         gl.uniform1i(entityProgram.unifs["shadowTex"], SHADOWTEXUNIT);
+
+        gl.activeTexture(TEXTURE0 + NOISETEXUNIT);
+        gl.bindTexture(TEXTURE_2D, resources.textures["noiseTex"].texture);
+        gl.uniform1i(entityProgram.unifs["noiseTex"], NOISETEXUNIT);
 
         for (var entity in sortedEntities[RenderType.BASIC]) {
             renderEntity(gl, entity, camera, entityProgram, resources);
@@ -202,6 +219,24 @@ class Renderer {
             gl.uniform1f(groundProgram.unifs["offsetMultiplier"],
                          renderComponent.offsetMultiplier);
             renderEntity(gl, entity, camera, groundProgram, resources);
+        }
+
+        var waterProgram = shaderManager.programs["water"];
+        gl.useProgram(waterProgram.handle);
+        setCameraToClipMatrix(gl, camera, waterProgram);
+        gl.uniform1f(waterProgram.unifs["dist"], camera.position.z);
+        gl.uniform1f(waterProgram.unifs["time"], time);
+
+        gl.activeTexture(TEXTURE0 + HEIGHTMAPTEXUNIT);
+        gl.bindTexture(TEXTURE_2D, resources.textures["heightmap2"].texture);
+        gl.uniform1i(waterProgram.unifs["heightMap2"], HEIGHTMAPTEXUNIT);
+
+        gl.activeTexture(TEXTURE0 + PALETTETEXUNIT);
+        gl.bindTexture(TEXTURE_2D, resources.textures["waterlookup"].texture);
+        gl.uniform1i(waterProgram.unifs["lookup"], PALETTETEXUNIT);
+
+        for (var entity in sortedEntities[RenderType.WATER]){
+            renderEntity(gl, entity, camera, waterProgram, resources);
         }
     }
 
@@ -235,7 +270,7 @@ class Renderer {
         transform[14] = entity.position.z;
 
         gl.activeTexture(TEXTURE0 + DIFFUSETEXUNIT);
-        gl.bindTexture(TEXTURE_2D, 
+        gl.bindTexture(TEXTURE_2D,
                        resources.textures[renderComponent.textureID].texture);
         gl.uniform1i(program.unifs["diffuseTex"], DIFFUSETEXUNIT);
 
@@ -263,7 +298,7 @@ class Renderer {
                     previousOffset = offset;
                     setModelToCameraMatrix(gl, camera, program,
                                            transformationMatrix: transMat);
-                    gl.drawElements(TRIANGLES, mesh.indices.length, 
+                    gl.drawElements(TRIANGLES, mesh.indices.length,
                                     UNSIGNED_SHORT, 0);
                 }
             });

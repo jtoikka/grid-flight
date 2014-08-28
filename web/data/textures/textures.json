@@ -14,5 +14,17 @@
     "palette": {
         "path": "data/textures/palettelookup.png",
         "nearest": true
+    },
+    "heightmap1": {
+        "path": "data/textures/lavamap.png",
+        "nearest": false
+    },
+    "heightmap2": {
+        "path": "data/textures/lavamap2.png",
+        "nearest": false
+    },
+    "waterlookup": {
+        "path": "data/textures/waterlookup.png",
+        "nearest": false
     }
 }

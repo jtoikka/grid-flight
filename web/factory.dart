@@ -25,7 +25,7 @@ class Factory {
         entity.addComponent(collisionComponent);
 
         var physicsComponent = new PhysicsComponent();
-        physicsComponent.velocity = new Vector3(0.0, 0.0, 10.0);
+        physicsComponent.velocity = new Vector3(0.0, 0.0, 4.0);
         entity.addComponent(physicsComponent);
 
         return entity;
@@ -224,9 +224,8 @@ class Factory {
         entity.shipOffset = shipPosition;
 
         var collisionComponent = new CollisionComponent();
-        collisionComponent = new CollisionComponent();
         collisionComponent.shape = CollisionShape.CUBE;
-        collisionComponent.halfDimensionsA = new Vector3(2.0, 3.5, 1000.1);
+        collisionComponent.halfDimensionsA = new Vector3(2.0, 3.5, 1000.0);
         entity.addComponent(collisionComponent);
 
         entity.followShip = true;
@@ -234,6 +233,31 @@ class Factory {
 
         return entity;
 
+    }
+
+    static Entity createWater() {
+        var entity = new Entity();
+        entity.entityType = EntityType.TUNNEL;
+
+        entity.position = new Vector3(0.0, -5.0, 0.0);
+
+        entity.shipOffset = 0.0;
+
+        var collisionComponent = new CollisionComponent();
+        collisionComponent.shape = CollisionShape.CUBE;
+        collisionComponent.halfDimensionsA = new Vector3(10.0, 0.5, 100.0);
+        entity.addComponent(collisionComponent);
+
+        entity.followShip = true;
+
+        var renderComponent = new RenderComponent();
+        renderComponent.meshID = "water";
+        renderComponent.textureID = "heightmap1";
+        renderComponent.type = RenderType.WATER;
+        renderComponent.offsetMultiplier = 1.0;
+        entity.addComponent(renderComponent);
+
+        return entity;
     }
 
     static Entity createStartButton(Vector2 dimensions) {

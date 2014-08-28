@@ -6,9 +6,13 @@
       "attributes": ["position", "texCoords"],
       "unifs": ["modelToCameraMatrix",
                 "cameraToClipMatrix",
+                "invModelToCam",
+                "worldToCameraMatrix",
                 "lightMatrix",
                 "diffuseTex",
-                "shadowTex"]
+                "shadowTex",
+                "noiseTex",
+                "dist"]
     },
     "ground": {
         "vertex": "data/shaders/ground.vs",
@@ -31,6 +35,20 @@
                  "paletteTex",
                  "noiseTex",
                  "depthTex"]
+    },
+    "water": {
+        "vertex": "data/shaders/water.vs",
+        "fragment": "data/shaders/water.fs",
+        "attributes": ["position", "texCoords"],
+        "unifs":["modelToCameraMatrix",
+                 "cameraToClipMatrix",
+                 "lightMatrix",
+                 "diffuseTex",
+                 "heightMap2",
+                 "noiseTex",
+                 "lookup",
+                 "dist",
+                 "time"]
     }
   }
 }

@@ -12,6 +12,8 @@ uniform float offsetMultiplier;
 
 varying vec3 viewPos;
 varying vec2 uv;
+varying vec3 lightCam;
+varying vec3 viewPosition;
 
 #define PI 3.1415927
 #define NOISERES 512.0
@@ -39,12 +41,16 @@ void main() {
 
     pos.x += offset * abs(offsetMultiplier);
 
-    vec4 cameraPos = modelToCameraMatrix * pos;
-    gl_Position = cameraToClipMatrix * cameraPos;
+    vec4 posCam = modelToCameraMatrix * pos;
+    gl_Position = cameraToClipMatrix * posCam;
 
-    viewPos = cameraPos.xyz;
+    viewPos = posCam.xyz;
     uv = texCoords;
     uv.y -= offset * ((offsetMultiplier + 1.0) / 2.0) * offsetMultiplier;
-    uv.x += dist;
     uv.x = (pos.z - dist) * 0.25;
+
+    vec3 light = vec3(offset, -4.5, pos.z);
+    lightCam = (modelToCameraMatrix * vec4(light, 1.0)).xyz;
+
+    viewPosition = posCam.xyz;
 }

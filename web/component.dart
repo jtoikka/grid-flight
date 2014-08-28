@@ -30,8 +30,9 @@ class RenderType {
     static const BASIC = const RenderType._(0);
     static const GROUND = const RenderType._(1);
     static const FLAT = const RenderType._(2);
+    static const WATER = const RenderType._(3);
 
-    static get values => [BASIC, GROUND, FLAT];
+    static get values => [BASIC, GROUND, FLAT, WATER];
 
     final int value;
 

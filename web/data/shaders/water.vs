@@ -2,16 +2,16 @@ attribute vec3 position;
 attribute vec2 texCoords;
 
 uniform mat4 modelToCameraMatrix;
-uniform mat4 worldToCameraMatrix;
 uniform mat4 cameraToClipMatrix;
 
 uniform sampler2D noiseTex;
 
 uniform float dist;
+uniform float time;
 
-varying vec3 viewPosition;
-varying vec2 uv;
-varying vec3 lightCam;
+varying vec3 viewPos;
+varying vec2 uvA;
+varying vec2 uvB;
 
 #define PI 3.1415927
 #define NOISERES 512.0
@@ -35,13 +35,21 @@ float noise(float dist) {
 
 void main() {
     vec4 pos = vec4(position, 1.0);
-    float offset = noise(-modelToCameraMatrix[3].z + dist);
-	vec4 posCam = modelToCameraMatrix * vec4(position, 1.0);
-	gl_Position = cameraToClipMatrix * posCam;
+    float offset = noise(-pos.z + dist);
 
-    vec3 light = vec3(-offset, -4.5, dist - modelToCameraMatrix[3].z);
-    lightCam = (worldToCameraMatrix * vec4(light, 1.0)).xyz;
+    pos.x += offset;
 
-    viewPosition = posCam.xyz;
-	uv = texCoords;
+    float depthOffset = pos.z / 100.0;
+    uvA = texCoords;
+    uvA.y -= offset + time * 0.02 + depthOffset * 0.3;
+    uvA.x = (pos.z - dist) * 0.100 + time * 0.05;
+
+    uvB = texCoords;
+    uvB.y -= offset - time * 0.01 - depthOffset * 0.7;
+    uvB.x = (pos.z - dist) * 0.1 + time * 0.04;
+
+    vec4 cameraPos = modelToCameraMatrix * pos;
+    gl_Position = cameraToClipMatrix * cameraPos;
+
+    viewPos = cameraPos.xyz;
 }

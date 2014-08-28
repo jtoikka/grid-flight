@@ -26,19 +26,22 @@ abstract class State {
 
 class MenuState extends State {
     Menu menu;
+    double time = 0.0;
 
     MenuState(int w, int h) {
         menu = new Menu(w, h);
     }
-    void update(double time, EventManager eventManager) {
-        menu.update(time);
+    void update(double delta, EventManager eventManager) {
+        menu.update(delta);
+        time += delta;
     }
     void render(RenderingContext gl, Renderer renderer,
                 RenderResources resources) {
         renderer.startRender(gl);
         renderer.renderEntities(gl, menu.camera,
-                                menu.backgroundEntities, resources);
-        renderer.renderEntities(gl, menu.camera2D, menu.entities, resources);
+                                menu.backgroundEntities, resources, time);
+        renderer.renderEntities(gl, menu.camera2D,
+                                menu.entities, resources, time);
         renderer.endRender(gl, resources);
     }
 
@@ -55,6 +58,7 @@ class MenuState extends State {
 
 class GameState extends State {
     Scene scene;
+    double time = 0.0;
 
     Map<int, bool> inputs = new Map();
 
@@ -62,15 +66,17 @@ class GameState extends State {
         scene = new Scene(w, h);
     }
 
-    void update(double time, EventManager eventManager) {
-        scene.input(inputs, time);
-        scene.update(time);
+    void update(double delta, EventManager eventManager) {
+        scene.input(inputs, delta);
+        scene.update(delta);
+        time += delta;
     }
 
     void render(RenderingContext gl, Renderer renderer,
                 RenderResources resources) {
         renderer.startRender(gl);
-        renderer.renderEntities(gl, scene.camera, scene.entities, resources);
+        renderer.renderEntities(gl, scene.camera, scene.entities,
+                                resources, time);
         renderer.endRender(gl, resources);
     }
 

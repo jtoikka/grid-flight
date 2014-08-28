@@ -10,7 +10,7 @@ import 'physics.dart';
 import 'river.dart';
 
 const SHADOWRESOLUTION = 1024;
-const FOLLOWOFFSET = 3.5;
+const FOLLOWOFFSET = 3.0;
 const WALLPERIOD = 16.0;
 const MAXDEPTH = 400.0;
 
@@ -59,6 +59,9 @@ class Scene {
         var riverWalls = Factory.createRiverWalls();
         entities.add(riverWalls);
 
+        var water = Factory.createWater();
+        entities.add(water);
+
         for (double i = WALLPERIOD; i < MAXDEPTH; i+=WALLPERIOD) {
             var wall = Factory.createWall(i + 0.5, 1, 1);
             entities.add(wall);
@@ -100,7 +103,7 @@ class Scene {
 
     void updateCamera(double delta, Vector3 shipPos) {
         camera.position.z = ship.position.z - FOLLOWOFFSET;
-        camera.position.x = ship.position.x * 0.84;
+        camera.position.x = ship.position.x * 0.9;
         camera.position.y = ship.position.y * 0.84;
         camera.forward = ship.position - camera.position
                        + new Vector3(0.0, 0.0, 18.0);
@@ -202,21 +205,23 @@ class Scene {
     bool left = false;
     bool right = false;
 
+    static const shipVelocity = 0.8;
+
     void input(Map inputs, double time) {
         var physComponent = ship.getComponent(PhysicsComponent);
         physComponent.velocity.y = 0.0;
         physComponent.velocity.x = 0.0;
         if (inputs[UP] != null) {
-            physComponent.velocity.y = 2.5;
+            physComponent.velocity.y = shipVelocity * 2.5;
         }
         if (inputs[DOWN] != null) {
-            physComponent.velocity.y = -2.5;
+            physComponent.velocity.y = -shipVelocity * 2.5;
         }
         if (inputs[LEFT] != null) {
-            physComponent.velocity.x = 3.5;
+            physComponent.velocity.x = shipVelocity * 3.5;
         }
         if (inputs[RIGHT] != null) {
-            physComponent.velocity.x = -3.5;
+            physComponent.velocity.x = -shipVelocity * 3.5;
         }
     }
 }

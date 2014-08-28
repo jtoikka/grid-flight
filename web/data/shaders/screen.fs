@@ -19,13 +19,12 @@ mediump float linearizeDepth(mediump float value) {
 void main() {
     mediump vec4 baseColour = texture2D(screenTex, uv);
     mediump float depth = linearizeDepth(texture2D(depthTex, uv).r);
-    depth *= 1.2;
+    depth *= 1.0;
     baseColour.r -= depth;
     baseColour.r = clamp(baseColour.r, 0.01, 0.99);
-    mediump float randomValue = texture2D(noiseTex, uv * screenSize * NOISERES).r * 0.9;
-    gl_FragColor = texture2D(paletteTex, vec2(0.0, baseColour.r + randomValue));
-    // gl_FragColor = texture2D(noiseTex, uv * screenSize * NOISERES);
-    // mediump float depth = linearizeDepth(texture2D(depthTex, uv).r);
-    // gl_FragColor = vec4(depth, depth, depth, 1.0);
-    // gl_FragColor = vec4(baseColour.r, 0.0, 0.0, 1.0);
+    mediump float randomValue = texture2D(noiseTex, uv * screenSize * NOISERES).r - 0.125;
+    mediump float v = clamp(baseColour.r + randomValue, 0.1, 0.9);
+    gl_FragColor = texture2D(paletteTex, vec2(0.0, v));
+
+    // gl_FragColor = baseColour.rrra;
 }
