@@ -207,21 +207,74 @@ class Scene {
 
     static const shipVelocity = 0.8;
 
+    Vector3 lerp(Vector3 a, Vector3 b, double amount) {
+        return a + (b - a) * amount;
+    }
+
+    static const TILT_RATE = 1.2;
+
     void input(Map inputs, double time) {
         var physComponent = ship.getComponent(PhysicsComponent);
         physComponent.velocity.y = 0.0;
         physComponent.velocity.x = 0.0;
+        var someInput = false;
         if (inputs[UP] != null) {
+            someInput = true;
             physComponent.velocity.y = shipVelocity * 2.5;
+            ship.forward = lerp(
+                ship.forward,
+                new Vector3(0.0, 1.0, 1.0).normalize(),
+                time * TILT_RATE).normalize();
         }
         if (inputs[DOWN] != null) {
+            someInput = true;
             physComponent.velocity.y = -shipVelocity * 2.5;
+            ship.forward = lerp(
+                ship.forward,
+                new Vector3(0.0, -1.0, 1.0).normalize(),
+                time * TILT_RATE).normalize();
         }
         if (inputs[LEFT] != null) {
+            someInput = true;
             physComponent.velocity.x = shipVelocity * 3.5;
+            if (ship.forward.y >= -0.1) {
+                ship.up = lerp(
+                    ship.up,
+                    new Vector3(1.0, 1.0, 0.0).normalize(),
+                    time * TILT_RATE).normalize();
+            } else {
+                ship.up = lerp(
+                    ship.up,
+                    new Vector3(0.0, 1.0, 0.0).normalize(),
+                    time * TILT_RATE).normalize();
+            }
         }
         if (inputs[RIGHT] != null) {
+            someInput = true;
             physComponent.velocity.x = -shipVelocity * 3.5;
+            if (ship.forward.y >= -0.1) {
+                ship.up = lerp(
+                    ship.up,
+                    new Vector3(-0.5, 1.0, 0.0).normalize(),
+                    time * TILT_RATE).normalize();
+            } else {
+                ship.up = lerp(
+                    ship.up,
+                    new Vector3(0.0, 1.0, 0.0).normalize(),
+                    time * TILT_RATE).normalize();
+            }
+        }
+        if (inputs[UP] == null && inputs[DOWN] == null) {
+            ship.forward = lerp(
+                ship.forward,
+                new Vector3(0.0, 0.0, 1.0),
+                time * TILT_RATE * 2).normalize();
+        }
+        if (inputs[LEFT] == null && inputs[RIGHT] == null) {
+            ship.up = lerp(
+                ship.up,
+                new Vector3(0.0, 1.0, 0.0).normalize(),
+                time * TILT_RATE * 2).normalize();
         }
     }
 }

@@ -10,7 +10,7 @@ varying mediump vec2 uv;
 #define ZNEAR 0.3
 #define ZFAR 400.0
 
-const mediump vec2 screenSize = vec2(240.0, 160.0);
+const mediump vec2 screenSize = vec2(480.0, 320.0);
 
 mediump float linearizeDepth(mediump float value) {
     return (2.0 * ZNEAR / (ZFAR + ZNEAR - value * (ZFAR - ZNEAR)));
